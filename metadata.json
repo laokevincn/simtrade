@@ -1,0 +1,5 @@
+{
+  "name": "TQ Quant Simulator",
+  "description": "A simulated trading platform for domestic futures running an intraday forward grid strategy.",
+  "requestFramePermissions": []
+}
