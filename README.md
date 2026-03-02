@@ -1,20 +1,101 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
-</div>
+# QuantSim Pro - 沪金/集运欧线量化模拟交易平台
 
-# Run and deploy your AI Studio app
+这是一个基于 **Node.js (Express)**、**React (Vite)** 和 **Python (TqSdk2)** 开发的期货量化模拟交易平台。该平台专为“日内顺势网格”策略设计，支持实时行情显示、自动化交易模拟以及策略参数动态调整。
 
-This contains everything you need to run your app locally.
+## 核心特性
 
-View your app in AI Studio: https://ai.studio/apps/a0dee70d-0b71-4fb3-81b8-450d629f3354
+- **多品种支持**：默认支持沪金主力 (au) 和集运欧线主力 (ec) 合约。
+- **双模自动切换**：
+  - **天勤模式**：当本地环境支持 Python 且安装了 `tqsdk2` 时，自动连接天勤行情服务器，支持毫秒级行情和模拟/实盘下单。
+  - **备用模式**：在无 Python 环境（如云端预览）下，自动切换至新浪财经 API，获取真实市场价格进行策略模拟。
+- **日内顺势网格策略**：
+  - 自动识别开盘基准价 (kp)。
+  - 根据设定的百分比触发初始开仓、止损和平仓。
+  - 支持盈利加仓逻辑。
+  - 每日最大止损次数限制，保护账户安全。
+- **实时可视化**：
+  - 1 分钟 K 线图表（基于 Lightweight Charts）。
+  - 实时盘口数据展示。
+  - 完整的订单成交记录和盈亏统计。
+- **全中文界面**：针对国内交易者优化的 UI 体验。
 
-## Run Locally
+## 技术栈
 
-**Prerequisites:**  Node.js
+- **前端**：React 18, TypeScript, Tailwind CSS, Lucide React, Lightweight Charts.
+- **后端**：Node.js, Express, WebSocket (ws), iconv-lite (处理 GBK 编码).
+- **桥接层**：Python 3, TqSdk2 (天勤量化 SDK).
 
+## 快速开始
 
-1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+### 1. 环境准备
+
+- **Node.js**: 18.x 或更高版本。
+- **Python** (可选，用于天勤行情): 3.8+ 版本。
+
+### 2. 安装依赖
+
+#### 安装 Node.js 依赖
+```bash
+npm install
+```
+
+#### 安装 Python 依赖 (如果需要使用天勤)
+```bash
+pip install tqsdk2 pandas
+```
+
+### 3. 配置天勤账号
+
+打开 `tq_bridge.py`，在 `TqApi` 初始化处填入你的天勤账号和密码：
+
+```python
+# tq_bridge.py
+api = TqApi(TqAccount("你的天勤账号", "你的密码"), auth=TqAuth("你的天勤账号", "你的密码"))
+```
+
+### 4. 启动开发服务器
+
+```bash
+npm run dev
+```
+
+启动后，访问浏览器中的 `http://localhost:3000` 即可进入交易平台。
+
+## 部署说明
+
+### 生产环境构建
+
+1. **构建前端资源**：
+   ```bash
+   npm run build
+   ```
+
+2. **启动生产服务器**：
+   ```bash
+   npm start
+   ```
+
+### 环境变量
+
+如果需要修改端口或其他配置，可以在根目录创建 `.env` 文件（参考 `.env.example`）：
+
+```env
+PORT=3000
+```
+
+## 策略逻辑说明
+
+1. **基准价 (kp)**：每日首个价格或手动重置时的价格作为基准。
+2. **初始开仓**：价格偏离 kp 达到 `pl` (1%) 时，顺势开仓 1 手。
+3. **止损**：价格反向偏离成交价达到 `sl` (0.5%) 时，立即止损。
+4. **加仓**：价格继续顺势偏离 kp 达到 `ap` (2%) 时，额外加仓 1 手。
+5. **收盘平仓**：在设定的收盘时间（如 14:59）强制平仓所有头寸。
+
+## 常见问题
+
+- **界面显示乱码**：本系统已内置 `iconv-lite` 处理新浪财经的 GBK 编码，确保中文正常显示。
+- **无法连接天勤**：请检查网络是否能访问天勤服务器，以及账号密码是否正确。如果无法连接，系统会自动降级到新浪财经 API 模式。
+
+## 免责声明
+
+本软件仅用于模拟交易和策略研究，不构成任何投资建议。实盘交易风险巨大，请谨慎操作。
